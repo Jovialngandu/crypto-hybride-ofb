@@ -97,7 +97,7 @@ Aucune installation de paquet externe n'est requise. Le projet utilise exclusive
 ### 1. Exécuter les tests unitaires
 Pour vérifier le bon fonctionnement des modules RSA et DES-OFB :
 ```bash
-python -m unittest discover tests/
+python -m unittest discover test/
 ```
 
 ### 2. Lancer la démonstration complète (Orchestration Hybride)
