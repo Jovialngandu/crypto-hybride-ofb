@@ -49,6 +49,7 @@ crypto-hybride-ofb/
 │   └── alphabet.py           # Table de correspondance de l'alphabet à 79 caractères
 ├── utils/
 │   └── math_ops.py           # Outils mathématiques (Euclide étendu, mod_pow, mod_inverse)
+│   └── helpers.py           # Fonctions d'aide (géneration IV et autres)
 ├── core/
 │   ├── des.py                # Moteur symétrique DES 64 bits (IP, S-Boxes, Feistel, IP⁻¹)
 │   └── rsa.py                # Moteur asymétrique RSA (Génération de clés, Chiffrement Mᵉ mod n)
