@@ -6,6 +6,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from core.rsa import generate_keypair, rsa_encrypt, rsa_decrypt
 from modes.ofb import encrypt_ofb, decrypt_ofb
+from utils.helpers import generate_random_iv
+
 
 def main():
     print("=" * 60)
@@ -20,8 +22,10 @@ def main():
 
     # 2. Clé DES et IV générés par l'émetteur (Client)
     K_DES_64 = "0100110001101111011001110110100101100011011010010110010101101100"
-    IV_64    = "0011000100110010001100110011010000110101001101100011011100111000"
-
+    #IV_64    = "0011000100110010001100110011010000110101001101100011011100111000"
+    IV_64	= generate_random_iv(64)
+    
+	
     # 3. Chiffrement RSA de la clé DES et de l'IV (Exemple par découpage/modulo pour la démo)
     k_des_num = int(K_DES_64, 2) % public_key[1]
     iv_num = int(IV_64, 2) % public_key[1]
