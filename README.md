@@ -5,58 +5,62 @@ Implémentation complète d'un cryptosystème hybride combinant RSA, DES et le m
 ## 🗺️ Diagramme d'Architecture (Flux de Données)
 
 ```text
-										+-------------------------------------------------------------+
-										
-										|                     COUCHE APPLICATION                      |
-										|       (Gestion des entrées/sorties, CLI ou Interface, I/O)  |
-										+-------------------------------------------------------------+
-										                               |
-										                               v
-										+-------------------------------------------------------------+
-										
-										|                       COUCHE HYBRIDE                        |
-										|   - RSA : Échange/Chiffrement de la Clé DES et IV          |
-										|   - Mode OFB : Génération du flux de clés (Keystream)       |
-										|   - Modulo 79 : Mapping Alphabétique Character-by-Char      |
-										+-------------------------------------------------------------+
-										                               |
-										                               v
-										+-------------------------------------------------------------+
-										
-										|                     MOTEUR DES (64-bit)                     |
-										|   - Key Schedule (PC1, Shifts, PC2 -> K1..K16)              |
-										|   - Permutation IP / IP-1                                   |
-										|   - Fonction F (Expansion E, XOR, S-Boxes 1..8, Perm P)     |
-										+-------------------------------------------------------------+
-										                               |
-										                               v
-										+-------------------------------------------------------------+
-										
-										|                 BOÎTE À OUTILS MATHÉMATIQUES                |
-										|   - Euclide Étendu (Inverse Modulaire)                      |
-										|   - Exponentiation Modulaire Rapide                         |
-										|   - Utilitaires de conversion (Bitwise, XOR, Offsets)       |
-										+-------------------------------------------------------------+
+					+-------------------------------------------------------------+
+					
+					|                     COUCHE APPLICATION                      |
+					|       (Gestion des entrées/sorties, CLI ou Interface, I/O)  |
+					+-------------------------------------------------------------+
+					                               |
+					                               v
+					+-------------------------------------------------------------+
+					
+					|                       COUCHE HYBRIDE                        |
+					|   - RSA : Échange/Chiffrement de la Clé DES et IV          |
+					|   - Mode OFB : Génération du flux de clés (Keystream)       |
+					|   - Modulo 79 : Mapping Alphabétique Character-by-Char      |
+					+-------------------------------------------------------------+
+					                               |
+					                               v
+					+-------------------------------------------------------------+
+					
+					|                     MOTEUR DES (64-bit)                     |
+					|   - Key Schedule (PC1, Shifts, PC2 -> K1..K16)              |
+					|   - Permutation IP / IP-1                                   |
+					|   - Fonction F (Expansion E, XOR, S-Boxes 1..8, Perm P)     |
+					+-------------------------------------------------------------+
+					                               |
+					                               v
+					+-------------------------------------------------------------+
+					
+					|                 BOÎTE À OUTILS MATHÉMATIQUES                |
+					|   - Euclide Étendu (Inverse Modulaire)                      |
+					|   - Exponentiation Modulaire Rapide                         |
+					|   - Utilitaires de conversion (Bitwise, XOR, Offsets)       |
+					+-------------------------------------------------------------+
 ```
 
 ## 📂 Arborescence du Projet
 
 ```text
-crypto_project/
-├── main.py                   # Point d'entrée principal (CLI / Orchestration)
+crypto-hybride-ofb/
+├── main.py                   # Point d'entrée principal (Orchestration hybride)
+├── requirements.txt          # Fichier vide (Utilise uniquement la bibliothèque standard Python)
+├── mapping/
+│   └── alphabet.py           # Table de correspondance de l'alphabet à 79 caractères
 ├── utils/
-│   ├── __init__.py
-│   └── math_ops.py           # Opérations arithmétiques bas niveau
+│   └── math_ops.py           # Outils mathématiques (Euclide étendu, mod_pow, mod_inverse)
 ├── core/
-│   ├── __init__.py
-│   ├── des.py                # Moteur DES pur (64 bits)
-│   └── rsa.py                # Algorithme RSA (Asymétrique)
+│   ├── des.py                # Moteur symétrique DES 64 bits (IP, S-Boxes, Feistel, IP⁻¹)
+│   └── rsa.py                # Moteur asymétrique RSA (Génération de clés, Chiffrement Mᵉ mod n)
 ├── modes/
-│   ├── __init__.py
-│   └── ofb.py                # Mode OFB & Générateur de Keystream
-└── mapping/
-    ├── __init__.py
-    └── alphabet.py           # Mapping Texte <-> Indices Modulo 79
+│   └── ofb.py                # Mode opératoire OFB & Chiffrement/Déchiffrement Modulo 79
+├── network/
+│   ├── config.py             # Configuration réseau (IP, Ports, Tailles de buffer)
+│   ├── server.py             # Serveur Socket TCP (Déchiffrement local & écoute)
+│   └── client.py             # Client Socket TCP (Chiffrement & transmission)
+└── tests/
+    ├── test_ofb.py           # Tests unitaires pour le moteur DES-OFB Modulo 79
+    └── test_rsa.py           # Tests unitaires pour le module RSA
 ```
 
 ## 🛠️ Responsabilité de Chaque Module
