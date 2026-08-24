@@ -4,36 +4,62 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from core.rsa import encrypt_bits_chunked
 from modes.ofb import encrypt_ofb
-
-SERVER_IP = "127.0.0.1"  # Remplace par l'IP du 2ème PC
-PORT = 65432
-K_DES = "0100110001101111011001110110100101100011011010010110010101101100"
-    
 from utils.helpers import generate_random_iv
-from modes.ofb import encrypt_ofb
+from network.config import SERVER_IP, PORT, BUFFER_SIZE, ENABLE_ENCRYPTION, FIXED_IV_MODE
+from network.helpers import get_current_iv, serialize_packet, deserialize_packet
 
-def start_client(chiffre: bool = True):
+def start_client():
+    mode_str = "CHIFFRÉ (RSA + DES-OFB)" if ENABLE_ENCRYPTION else "EN CLAIR (INSÉCURISÉ)"
+    iv_str = "FIXE (Vulnérable)" if FIXED_IV_MODE else "DYNAMIQUE (Aléatoire)"
+
+    print("=" * 65)
+    print(f"  CLIENT MESSAGERIE - MODE : {mode_str}")
+    if ENABLE_ENCRYPTION:
+        print(f"  GESTION DES IV   : {iv_str}")
+    print("=" * 65)
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        print(f"[*] Connexion au serveur {SERVER_IP}:{PORT}...")
         s.connect((SERVER_IP, PORT))
-        print("[+] Connecté au serveur !")
-        
+        print("[+] Connecté !")
+
+        k_des_session = None
+
+        if ENABLE_ENCRYPTION:
+            # 1. Réception de la clé publique RSA du serveur
+            pub_data = deserialize_packet(s.recv(BUFFER_SIZE))
+            public_key = (pub_data["e"], pub_data["n"])
+
+            # 2. Génération unique de la clé DES et envoi RSA au serveur
+            k_des_session = generate_random_iv(64)
+            encrypted_k_des = encrypt_bits_chunked(k_des_session, public_key)
+            s.sendall(serialize_packet({"encrypted_k_des": encrypted_k_des}))
+            print("[RSA Handshake] Clé DES transmise de façon sécurisée !\n")
+
         while True:
-            msg = input("Message à envoyer (ou 'exit') : ")
+            msg = input("\nMessage à envoyer (ou 'exit') : ")
             if msg.lower() == 'exit':
                 break
+            if not msg.strip():
+                continue
+
+            if ENABLE_ENCRYPTION:
+                # Sélection dynamique ou fixe de l'IV
+                current_iv = get_current_iv()
+                ciphertext = encrypt_ofb(msg, current_iv, k_des_session)
                 
-            if chiffre:
-                # Génération dynamique d'un IV unique par message
-                current_iv = generate_random_iv(64)
-                ciphertext = encrypt_ofb(msg, current_iv, K_DES)
-                
-                # Format du paquet : [IV sur 64 bits (64 chars)] + [Ciphertext]
-                a_envoyer = current_iv + ciphertext
+                packet = serialize_packet({
+                    "iv": current_iv,
+                    "ciphertext": ciphertext
+                })
             else:
-                a_envoyer = msg
-                
-            s.sendall(a_envoyer.encode('utf-8'))
+                # Transmis en clair
+                packet = msg.encode('utf-8')
+
+            s.sendall(packet)
+            print("[+] Message envoyé sur le réseau !")
 
 if __name__ == "__main__":
-    start_client(chiffre=True)
+    start_client()
